@@ -18,10 +18,13 @@ function getPunnableWords(word) {
             const information = result['meta'];
             const word = trimWordIfNeeded(information['id']);
             const partOfSpeech = information['fl'];
+            const possiblePuns = information['syns'];
 
-            for (const part of partsOfSpeech) {
-              if (part !== partOfSpeech) {
-                punnableWords[part].push(word);
+            for (const pun of possiblePuns) {
+              for (const part of partsOfSpeech) {
+                if (part !== partOfSpeech) {
+                  punnableWords[part].push(pun);
+                }
               }
             }
           }
