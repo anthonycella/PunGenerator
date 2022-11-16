@@ -1,35 +1,30 @@
 const axios = require('axios');
 
 
-function getPunnableWords(word) {
-  getPartsOfSpeech(word)
-    .then((partsOfSpeech) => {
-      const punnableWords = {};
+function getPunnableWords(word, partOfSpeechOfOriginal) {
+  axios(`https://www.dictionaryapi.com/api/v3/references/thesaurus/json/${word}?key=${process.env.THESAURUS_API_KEY}`)
+    .then((response) => {
+      const punnableWords = [];
 
-      for (const partOfSpeech of partsOfSpeech) {
-        punnableWords[partOfSpeech] = [];
+      for (const result of response) {
+        const information = result['meta'];
+        const partOfSpeechOfResult = information['fl'];
+
+        if (partOfSpeechOfResult !== partOfSpeechOfOriginal) continue;
+
+        const word = trimWordIfNeeded(information['id']);
+        const possiblePuns = information['syns'];
+
+        for (const pun of possiblePuns) {
+          if (part !== partOfSpeechOfResult) {
+            punnableWords.push(pun);
+          }
+        }
+
+        return punnableWords;
       }
 
-      axios(`https://www.dictionaryapi.com/api/v3/references/thesaurus/json/${word}?key=${process.env.THESAURUS_API_KEY}`)
-        .then((response) => {
-
-          for (const result of response) {
-            const punnableWordResponses = [];
-            const information = result['meta'];
-            const word = trimWordIfNeeded(information['id']);
-            const partOfSpeech = information['fl'];
-            const possiblePuns = information['syns'];
-
-            for (const pun of possiblePuns) {
-              for (const part of partsOfSpeech) {
-                if (part !== partOfSpeech) {
-                  punnableWords[part].push(pun);
-                }
-              }
-            }
-          }
-        });
-    })
+    });
 }
 
 function getPartsOfSpeech(word) {
@@ -76,4 +71,5 @@ function trimWordIfNeeded(word) {
 
 module.exports {
   getPunnableWords,
+  getPartsOfSpeech,
 }
