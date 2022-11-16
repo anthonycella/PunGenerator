@@ -5,6 +5,7 @@ function getPunnableWords(word, partOfSpeechOfOriginal) {
   axios(`https://www.dictionaryapi.com/api/v3/references/thesaurus/json/${word}?key=${process.env.THESAURUS_API_KEY}`)
     .then((response) => {
       const punnableWords = [];
+      const promises = [];
 
       for (const result of response) {
         const information = result['meta'];
@@ -16,12 +17,23 @@ function getPunnableWords(word, partOfSpeechOfOriginal) {
         const possiblePuns = information['syns'];
 
         for (const pun of possiblePuns) {
-          if (part !== partOfSpeechOfResult) {
-            punnableWords.push(pun);
-          }
+          const partsOfSpeechOfPun = getPartsOfSpeech(pun);
+          promises.push(partsOfSpeechOfPun);
         }
 
-        return punnableWords;
+        Promise.all(promises).then((results) => {
+          for (let currentIndex = 0; currentIndex < results.length; currentIndex++) {
+            const currentResult = results[currentIndex];
+
+            if (currentResult.length > 1) {
+              punnableWords.push(possiblePuns[currentIndex]);
+            } else if (currentResult[0] !== partOfSpeechOfOriginal) {
+              punnableWords.push(possiblePuns[currentIndex]);
+            }
+          }
+
+          return punnableWords;
+        });
       }
 
     });
@@ -67,6 +79,7 @@ function trimWordIfNeeded(word) {
 
   return word;
 }
+
 
 
 module.exports {
