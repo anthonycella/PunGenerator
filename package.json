@@ -17,8 +17,7 @@
     "react-dom": "^18.2.0",
     "react-icons": "^4.4.0",
     "styled-components": "^5.3.5",
-    "webpack": "^5.74.0",
-    "webpack-cli": "^4.10.0"
+    "webpack": "^5.74.0"
   },
   "scripts": {
     "client-dev": "npx webpack --watch",
@@ -42,5 +41,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "webpack-cli": "^4.10.0"
   }
 }
