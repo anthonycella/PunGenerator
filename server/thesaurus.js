@@ -1,42 +1,48 @@
+require('dotenv').config();
 const axios = require('axios');
 
 
 function getPunnableWords(word, partOfSpeechOfOriginal) {
-  axios(`https://www.dictionaryapi.com/api/v3/references/thesaurus/json/${word}?key=${process.env.THESAURUS_API_KEY}`)
-    .then((response) => {
-      const punnableWords = [];
-      const promises = [];
+  return new Promise((resolve, reject) => {
+    console.log('Thesaurus key:', process.env.THESAURUS_API_KEY);
+    console.log('Dictionary key:', process.env.DICTIONARY_API_KEY);
+    axios(`https://www.dictionaryapi.com/api/v3/references/thesaurus/json/${word}?key=${process.env.THESAURUS_API_KEY}`)
+      .then((response) => {
+        const punnableWords = [];
+        const promises = [];
 
-      for (const result of response) {
-        const information = result['meta'];
-        const partOfSpeechOfResult = information['fl'];
+        console.log(response.data);
+        for (const result of response.data) {
+          const information = result['meta'];
+          console.log('result is', result);
+          const partOfSpeechOfResult = information['fl'];
 
-        if (partOfSpeechOfResult !== partOfSpeechOfOriginal) continue;
+          if (partOfSpeechOfResult !== partOfSpeechOfOriginal) continue;
 
-        const word = trimWordIfNeeded(information['id']);
-        const possiblePuns = information['syns'];
+          const word = trimWordIfNeeded(information['id']);
+          const possiblePuns = information['syns'];
 
-        for (const pun of possiblePuns) {
-          const partsOfSpeechOfPun = getPartsOfSpeech(pun);
-          promises.push(partsOfSpeechOfPun);
-        }
-
-        Promise.all(promises).then((results) => {
-          for (let currentIndex = 0; currentIndex < results.length; currentIndex++) {
-            const currentResult = results[currentIndex];
-
-            if (currentResult.length > 1) {
-              punnableWords.push(possiblePuns[currentIndex]);
-            } else if (currentResult[0] !== partOfSpeechOfOriginal) {
-              punnableWords.push(possiblePuns[currentIndex]);
-            }
+          for (const pun of possiblePuns) {
+            const partsOfSpeechOfPun = getPartsOfSpeech(pun);
+            promises.push(partsOfSpeechOfPun);
           }
 
-          return punnableWords;
-        });
-      }
+          Promise.all(promises).then((results) => {
+            for (let currentIndex = 0; currentIndex < results.length; currentIndex++) {
+              const currentResult = results[currentIndex];
 
-    });
+              if (currentResult.length > 1) {
+                punnableWords.push(possiblePuns[currentIndex]);
+              } else if (currentResult[0] !== partOfSpeechOfOriginal) {
+                punnableWords.push(possiblePuns[currentIndex]);
+              }
+            }
+
+            Promise.resolve(punnableWords);
+          });
+        }
+      });
+  });
 }
 
 function getPartsOfSpeech(word) {
@@ -81,8 +87,7 @@ function trimWordIfNeeded(word) {
 }
 
 
-
-module.exports {
-  getPunnableWords,
-  getPartsOfSpeech,
+module.exports = {
+  getPunnableWords: getPunnableWords,
+  getPartsOfSpeech: getPartsOfSpeech,
 }
